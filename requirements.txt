@@ -6,4 +6,5 @@ pdfplumber==0.10.3
 reportlab==4.0.4
 langchain-text-splitters==0.0.1
 Werkzeug==2.3.7
-gunicorn==20.1.0
+gunicorn==21.2.0
+setuptools==68.2.2
