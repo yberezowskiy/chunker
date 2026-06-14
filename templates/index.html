@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto text-center">
+        <h1 class="display-4">🐱 Чанкер РА</h1>
+        <p class="lead">Профессиональный адаптер баз знаний с умным чанкингом</p>
+        
+        {% if current_user.is_authenticated %}
+            <div class="alert alert-success">
+                <h4>Добро пожаловать, {{ current_user.username }}!</h4>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg">Перейти к обработке файлов</a>
+            </div>
+        {% else %}
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Для начала работы необходимо авторизоваться</h5>
+                    <p class="card-text">Создайте аккаунт или войдите в существующий</p>
+                    <a href="{{ url_for('register') }}" class="btn btn-success">Регистрация</a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-primary">Вход</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

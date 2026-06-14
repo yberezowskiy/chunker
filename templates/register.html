@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация - Чанкер РА{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h3>Регистрация</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Имя пользователя</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Пароль</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Зарегистрироваться</button>
+                    <a href="{{ url_for('login') }}" class="btn btn-link">Уже есть аккаунт?</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

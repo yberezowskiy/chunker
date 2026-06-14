@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Пользователи - Чанкер РА{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2>👥 Пользователи системы</h2>
+        <div class="alert alert-info">
+            <strong>Административная панель</strong> - только для администратора системы
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h4>📋 Все пользователи</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Имя пользователя</th>
+                                <th>Email</th>
+                                <th>Роль</th>
+                                <th>Зарегистрирован</th>
+                                <th>Действий в системе</th>
+                                <th>Последнее действие</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.id }}</td>
+                                <td>
+                                    <span class="badge bg-{% if user.role == 'admin' %}success{% elif user.role == 'moderator' %}warning{% else %}secondary{% endif %}">
+                                        {{ user.username }}
+                                        {% if user.role == 'admin' %}(Админ){% elif user.role == 'moderator' %}(Модер){% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span class="badge bg-{% if user.role == 'admin' %}success{% elif user.role == 'moderator' %}warning{% else %}secondary{% endif %}">
+                                        {{ user.role|title }}
+                                    </span>
+                                </td>
+                                <td>{{ user.created_at.strftime('%d.%m.%Y %H:%M') if user.created_at else 'Неизвестно' }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ user_stats[user.id] or 0 }}</span>
+                                </td>
+                                <td>
+                                    {% set last_log = user.logs|last %}
+                                    {% if last_log %}
+                                        {{ last_log.timestamp.strftime('%d.%m.%Y %H:%M') }}
+                                    {% else %}
+                                        Нет действий
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.id != 1 %}<!-- Нельзя редактировать главного админа -->
+                                        <a href="{{ url_for('edit_user', user_id=user.id) }}" class="btn btn-sm btn-outline-primary" title="Редактировать">
+                                            ✏️
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="alert alert-warning mt-3">
+                    <strong>Всего пользователей:</strong> {{ users|length }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Добавляем ссылку на эту страницу в dashboard -->
+<div class="row mt-3">
+    <div class="col-12">
+        <a href="{{ url_for('admin_users') }}" class="btn btn-outline-primary btn-sm">👥 Управление пользователями</a>
+        <a href="{{ url_for('admin_logs') }}" class="btn btn-outline-warning btn-sm">📋 Все логи системы</a>
+    </div>
+</div>
+{% endblock %}

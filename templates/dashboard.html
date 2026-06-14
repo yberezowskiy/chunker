@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Панель управления - Чанкер РА{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2>Панель управления</h2>
+        <div class="alert alert-info">
+            <strong>Пользователь:</strong> {{ user.username }} ({{ user.email }})
+            <br><strong>Зарегистрирован:</strong> {{ user.created_at.strftime('%d.%m.%Y') if user.created_at else 'Неизвестно' }}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>📤 Загрузка файла</h4>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Выберите файл (JSON, TXT, DOCX, PDF)</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".json,.txt,.docx,.pdf" required>
+                        <div class="form-text">⚠️ ВНИМАНИЕ: Загрузка NDA данных строго запрещена!</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="uploadBtn">Загрузить и обработать</button>
+                </form>
+                
+                <div class="progress mt-3" style="display: none;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                </div>
+                
+                <div id="logArea" class="mt-3" style="display: none;">
+                    <h5>Лог обработки:</h5>
+                    <div id="logContent" class="bg-dark text-light p-3" style="height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h4>⚙️ Настройки</h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Шаблон вывода</label>
+                    <select class="form-select" id="template">
+                        <option value="universal">🏆 Универсальный</option>
+                        <option value="speech_sense">🤖 Speech Sense</option>
+                        <option value="flat">📄 Плоский текст</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Режим чанкинга</label>
+                    <select class="form-select" id="preset">
+                        <option value="auto">🤖 Авто-подбор</option>
+                        <option value="facts">⚡ Точный поиск</option>
+                        <option value="balanced">⚖️ Универсальный баланс</option>
+                        <option value="context">📚 Глубокий контекст</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Размер чанка</label>
+                    <input type="number" class="form-control" id="chunkSize" value="800" min="100" max="5000">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Перекрытие</label>
+                    <input type="number" class="form-control" id="chunkOverlap" value="80" min="0" max="1000">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Последние действия пользователя -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h4>📝 Ваши последние действия</h4>
+            </div>
+            <div class="card-body">
+                {% if logs %}
+                    <ul class="list-group list-group-flush">
+                        {% for log in logs %}
+                        <li class="list-group-item">
+                            <small class="text-muted">{{ log.timestamp.strftime('%d.%m.%Y %H:%M') if log.timestamp else 'Неизвестно' }}</small><br>
+                            <span class="badge bg-{% if 'Загрузка' in log.action %}danger{% elif 'Вход' in log.action %}success{% elif 'Выход' in log.action %}secondary{% else %}primary{% endif %}">
+                                {{ log.action }}
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">Действий пока нет</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Секция настройки полей (скрыта по умолчанию) -->
+<div class="row mt-4" id="mappingSection" style="display: none;">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>🧠 Настройка полей</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Подтвердите соответствие полей для правильной обработки данных</p>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">🏷 Категория (Группа записи)</label>
+                            <select class="form-select" id="categoryField">
+                                <option value="">-- Не выбрано --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">📄 Текст (Основное описание)</label>
+                            <select class="form-select" id="contentField">
+                                <option value="">-- Не выбрано --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">⚛ Списки (Подкатегории)</label>
+                            <select class="form-select" id="atomicField">
+                                <option value="">-- Не выбрано --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-secondary" onclick="autoConfigureFields()">
+                            🤖 Авто-настройка
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="applyMapping()">
+                            ✅ Применить настройки
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-info">
+                            <strong>👁️ Предпросмотр:</strong>
+                            <pre id="mappingPreview" class="mb-0 mt-2" style="font-size: 12px; white-space: pre-wrap;">Настройте поля...</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4" id="resultSection" style="display: none;">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>📥 Результаты</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success">
+                    <strong>Обработано успешно!</strong> Создано <span id="chunkCount">0</span> чанков.
+                </div>
+                
+                <div class="mt-3">
+                    <h5>📥 Режим сохранения:</h5>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="saveMode" id="saveModeRead" value="read" checked>
+                        <label class="form-check-label" for="saveModeRead">
+                            👁️ Для чтения (Красивый документ)
+                        </label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="saveMode" id="saveModeRag" value="rag">
+                        <label class="form-check-label" for="saveModeRag">
+                            🤖 Для Базы Знаний (Чистый JSON)
+                        </label>
+                    </div>
+                    
+                    <div class="btn-group mt-2" role="group">
+                        <button class="btn btn-success" onclick="downloadResult('json')">💾 JSON</button>
+                        <button class="btn btn-primary" onclick="downloadResult('pdf')">📄 PDF</button>
+                        <button class="btn btn-info" onclick="downloadResult('txt')">📝 TXT</button>
+                        <button class="btn btn-secondary" onclick="downloadResult('docx')">📘 DOCX</button>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <h5>Предпросмотр:</h5>
+                    <div id="previewContent" style="max-height: 300px; overflow-y: auto;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Добавляем в конец dashboard.html -->
+{% if current_user.id == 1 %}<!-- Только для админа -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('admin_users') }}" class="btn btn-outline-primary btn-sm">👥 Пользователи</a>
+            <a href="{{ url_for('admin_logs') }}" class="btn btn-outline-warning btn-sm">📋 Все логи</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+

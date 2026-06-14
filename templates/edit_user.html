@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Редактирование пользователя - Чанкер РА{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4>✏️ Редактирование пользователя: {{ user.username }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">ID пользователя</label>
+                                <input type="text" class="form-control" value="{{ user.id }}" disabled>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Имя пользователя</label>
+                                <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="role" class="form-label">Роль</label>
+                                <select class="form-select" id="role" name="role">
+                                    <option value="user" {% if user.role == 'user' %}selected{% endif %}>Пользователь</option>
+                                    <option value="moderator" {% if user.role == 'moderator' %}selected{% endif %}>Модератор</option>
+                                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Администратор</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Зарегистрирован</label>
+                                <input type="text" class="form-control" value="{{ user.created_at.strftime('%d.%m.%Y %H:%M') if user.created_at else 'Неизвестно' }}" disabled>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Текущая роль</label>
+                                <input type="text" class="form-control" value="{{ user.role|title }}" disabled>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Действий в системе</label>
+                                <input type="text" class="form-control" value="{{ user.logs|length }}" disabled>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="new_password" class="form-label">Новый пароль (оставьте пустым, чтобы не менять)</label>
+                                <input type="password" class="form-control" id="new_password" name="new_password" placeholder="Введите новый пароль">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('admin_users') }}" class="btn btn-secondary">❌ Отмена</a>
+                        <button type="submit" class="btn btn-success">💾 Сохранить изменения</button>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <div class="alert alert-warning">
+                    <h5>⚠️ Опасная зона</h5>
+                    <p>Удаление пользователя приведет к безвозвратному удалению всех его данных и действий.</p>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        🗑️ Удалить пользователя
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения удаления -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Подтверждение удаления</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить пользователя <strong>{{ user.username }}</strong>?</p>
+                <p class="text-danger">Это действие нельзя отменить!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">🗑️ Да, удалить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
